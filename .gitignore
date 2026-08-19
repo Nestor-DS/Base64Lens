@@ -1,0 +1,7 @@
+out/
+node_modules/
+*.vsix
+.vscode-test/
+
+/.vscode/launch.json
+/.vscode/tasks.json

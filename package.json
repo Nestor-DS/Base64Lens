@@ -1,0 +1,60 @@
+{
+  "name": "base64lens",
+  "displayName": "Base64Lens",
+  "description": "Visualize Base64-encoded PDFs, images, and documents directly in VS Code",
+  "version": "0.1.0",
+  "publisher": "base64lens",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Visualization",
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "base64lens.preview",
+        "title": "Preview Base64"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "base64lens.preview",
+          "group": "Base64Lens",
+          "when": "editorHasSelection"
+        }
+      ],
+      "editor/selection/context": [
+        {
+          "command": "base64lens.preview",
+          "group": "Base64Lens"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "base64lens.preview",
+        "key": "ctrl+shift+b",
+        "mac": "cmd+shift+b",
+        "when": "editorHasSelection"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^4.0.379"
+  }
+}
