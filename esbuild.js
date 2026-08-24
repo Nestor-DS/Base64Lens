@@ -29,6 +29,19 @@ const webviewConfig = {
   minify: false,
 };
 
+/** @type {import('esbuild').BuildOptions} */
+const testConfig = {
+  entryPoints: ["src/test/**/*.test.ts"],
+  outdir: "out/test",
+  outbase: "src",
+  bundle: true,
+  external: ["vscode"],
+  format: "cjs",
+  platform: "node",
+  target: "node18",
+  sourcemap: false,
+};
+
 async function build() {
   const tasks = [
     watch
@@ -37,6 +50,7 @@ async function build() {
     watch
       ? esbuild.context(webviewConfig).then((ctx) => ctx.watch())
       : esbuild.build(webviewConfig),
+    esbuild.build(testConfig),
   ];
 
   await Promise.all(tasks);

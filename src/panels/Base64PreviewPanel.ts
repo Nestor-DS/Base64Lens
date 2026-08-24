@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as os from "os";
 import * as path from "path";
+import * as crypto from "crypto";
 import * as fs from "fs";
 import {
   cleanBase64,
@@ -10,6 +11,10 @@ import {
   FileType,
   ALL_FILE_TYPES,
 } from "../utils/base64Utils";
+import type { WebviewToExtensionMessage } from "../shared/messages";
+
+const DATA_URI_PATTERN =
+  /^data:[a-z0-9.+-]+\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/=]*$/;
 
 export class Base64PreviewPanel {
   public static currentPanel: Base64PreviewPanel | undefined;
@@ -29,10 +34,7 @@ export class Base64PreviewPanel {
       return;
     }
 
-    const tempDir = path.join(os.tmpdir(), "base64lens");
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "base64lens-"));
 
     const panel = vscode.window.createWebviewPanel(
       "base64lens",
@@ -98,6 +100,7 @@ export class Base64PreviewPanel {
         for (const file of files) {
           fs.unlinkSync(path.join(this._tempDir, file));
         }
+        fs.rmdirSync(this._tempDir);
       }
     } catch {}
   }
@@ -120,7 +123,7 @@ export class Base64PreviewPanel {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${this._panel.webview.cspSource}; script-src 'nonce-${nonce}' ${this._panel.webview.cspSource}; img-src data: https: ${this._panel.webview.cspSource}; frame-src ${this._panel.webview.cspSource} data:; worker-src ${this._panel.webview.cspSource} blob:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' ${this._panel.webview.cspSource}; script-src 'nonce-${nonce}' ${this._panel.webview.cspSource}; img-src data: ${this._panel.webview.cspSource}; worker-src ${this._panel.webview.cspSource};">
   <title>Base64Lens</title>
   <link rel="stylesheet" href="${stylesUri}">
 </head>
@@ -176,7 +179,7 @@ export class Base64PreviewPanel {
 
   private _setWebviewMessageListener(webview: vscode.Webview) {
     webview.onDidReceiveMessage(
-      (message: any) => {
+      (message: WebviewToExtensionMessage) => {
         try {
           switch (message.command) {
             case "preview": {
@@ -229,8 +232,21 @@ export class Base64PreviewPanel {
             }
 
             case "download": {
-              const dataUri = message.dataUri as string;
-              const fileType = message.fileType as FileType;
+              const dataUri = message.dataUri;
+              const fileType = message.fileType;
+
+              if (!DATA_URI_PATTERN.test(dataUri)) {
+                this._sendMessage("showError", "Invalid data URI for download.");
+                return;
+              }
+              if (!ALL_FILE_TYPES.includes(fileType)) {
+                this._sendMessage(
+                  "showError",
+                  `Unsupported file type for download: ${String(fileType)}`,
+                );
+                return;
+              }
+
               this._handleDownload(dataUri, fileType);
               break;
             }
@@ -240,10 +256,10 @@ export class Base64PreviewPanel {
               break;
             }
           }
-        } catch (err: any) {
+        } catch (err) {
           this._sendMessage(
             "showError",
-            `Unexpected error: ${err.message || err}`,
+            `Unexpected error: ${toErrorMessage(err)}`,
           );
         }
       },
@@ -275,8 +291,8 @@ export class Base64PreviewPanel {
         mimeType,
         label: `PDF  ${sizeKB} KB`,
       });
-    } catch (err: any) {
-      this._sendMessage("showError", `Failed to render PDF: ${err.message}`);
+    } catch (err) {
+      this._sendMessage("showError", `Failed to render PDF: ${toErrorMessage(err)}`);
     }
   }
 
@@ -331,8 +347,8 @@ export class Base64PreviewPanel {
         base64,
         fileName,
       });
-    } catch (err: any) {
-      this._sendMessage("showError", `Failed to read file: ${err.message}`);
+    } catch (err) {
+      this._sendMessage("showError", `Failed to read file: ${toErrorMessage(err)}`);
     }
   }
 
@@ -345,8 +361,9 @@ export class Base64PreviewPanel {
       }
       const base64Data = parts[1];
 
+      const safeType = ALL_FILE_TYPES.includes(fileType) ? fileType : "bin";
       const uri = await vscode.window.showSaveDialog({
-        defaultUri: vscode.Uri.file(`preview.${fileType}`),
+        defaultUri: vscode.Uri.file(`preview.${safeType}`),
         filters: { "All Files": ["*"] },
       });
 
@@ -355,18 +372,19 @@ export class Base64PreviewPanel {
         await vscode.workspace.fs.writeFile(uri, buffer);
         vscode.window.showInformationMessage(`Saved: ${uri.fsPath}`);
       }
-    } catch (err: any) {
-      vscode.window.showErrorMessage(`Download failed: ${err.message}`);
+    } catch (err) {
+      vscode.window.showErrorMessage(`Download failed: ${toErrorMessage(err)}`);
     }
   }
 }
 
-function getNonce(): string {
-  let text = "";
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < 32; i++) {
-    text += chars.charAt(Math.floor(Math.random() * chars.length));
+function toErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    return err.message;
   }
-  return text;
+  return String(err);
+}
+
+function getNonce(): string {
+  return crypto.randomBytes(16).toString("hex");
 }

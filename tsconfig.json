@@ -2,18 +2,14 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2020",
-    "lib": ["ES2020"],
-    "outDir": "./out",
-    "rootDir": "./src",
-    "sourceMap": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "noEmit": true,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "declaration": false,
-    "declarationMap": false
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "webview"]
+  "include": ["src/**/*", "webview/**/*.ts", "esbuild.js"],
+  "exclude": ["node_modules", "out"]
 }

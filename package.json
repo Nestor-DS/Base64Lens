@@ -4,6 +4,23 @@
   "description": "Visualize Base64-encoded PDFs, images, and documents directly in VS Code",
   "version": "0.1.0",
   "publisher": "base64lens",
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Nestor-DS/Base64Lens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Nestor-DS/Base64Lens/issues"
+  },
+  "homepage": "https://github.com/Nestor-DS/Base64Lens#readme",
+  "keywords": [
+    "base64",
+    "pdf",
+    "image",
+    "preview",
+    "decoder"
+  ],
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -26,33 +43,38 @@
           "group": "Base64Lens",
           "when": "editorHasSelection"
         }
-      ],
-      "editor/selection/context": [
-        {
-          "command": "base64lens.preview",
-          "group": "Base64Lens"
-        }
       ]
     },
     "keybindings": [
       {
         "command": "base64lens.preview",
-        "key": "ctrl+shift+b",
-        "mac": "cmd+shift+b",
+        "key": "ctrl+alt+b",
+        "mac": "cmd+alt+b",
         "when": "editorHasSelection"
       }
     ]
   },
   "scripts": {
+    "vscode:prepublish": "npm run build",
     "build": "node esbuild.js",
     "watch": "node esbuild.js --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "npm run build && vscode-test",
     "package": "vsce package"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
     "esbuild": "^0.20.0",
-    "typescript": "^5.3.0"
+    "eslint": "^10.8.1",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.67.0"
   },
   "dependencies": {
     "pdfjs-dist": "^4.0.379"

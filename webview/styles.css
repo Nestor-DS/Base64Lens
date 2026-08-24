@@ -307,6 +307,15 @@ select:focus {
   justify-content: center;
 }
 
+.preview-container.pdf-pages {
+  display: block;
+}
+
+.preview-container.pdf-pages img {
+  margin: 0 auto;
+  max-height: none;
+}
+
 .preview-container img {
   max-width: 100%;
   max-height: 70vh;

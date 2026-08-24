@@ -3,7 +3,13 @@
 src/**
 webview/**
 node_modules/**
+out/test/**
+scripts/**
+.github/**
 .gitignore
 tsconfig.json
 esbuild.js
+eslint.config.cjs
+.vscode-test.mjs
 **/*.map
+*.vsix

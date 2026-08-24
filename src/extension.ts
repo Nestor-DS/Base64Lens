@@ -22,4 +22,6 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(previewCommand);
 }
 
-export function deactivate() {}
+export function deactivate() {
+  Base64PreviewPanel.currentPanel?.dispose();
+}

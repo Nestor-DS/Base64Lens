@@ -1,11 +1,18 @@
 import * as pdfjsLib from "pdfjs-dist";
+import type { ExtensionToWebviewMessage } from "../src/shared/messages";
+
+declare function acquireVsCodeApi(): {
+  postMessage(msg: unknown): void;
+  getState(): unknown;
+  setState(state: unknown): void;
+};
+
+const vscode = acquireVsCodeApi();
 
 const workerSrc = document.body.getAttribute("data-worker-src");
 if (workerSrc) {
-  (pdfjsLib as any).GlobalWorkerOptions.workerSrc = workerSrc;
+  pdfjsLib.GlobalWorkerOptions.workerSrc = workerSrc;
 }
-
-const vscode = acquireVsCodeApi();
 
 const base64Input = document.getElementById(
   "base64Input",
@@ -30,6 +37,16 @@ function setStatus(text: string, type?: string) {
   statusBar.className = "status" + (type ? " " + type : "");
 }
 
+function showErrorBox(text: string) {
+  previewContainer.innerHTML =
+    '<div class="error-box">' +
+    '<span class="error-icon">!</span>' +
+    '<span class="error-text">' +
+    text +
+    "</span>" +
+    "</div>";
+}
+
 async function renderPdfToImages(dataUri: string): Promise<string[]> {
   const base64 = dataUri.includes(",") ? dataUri.split(",")[1] : dataUri;
   const cleaned = base64.replace(/[\s\r\n]/g, "");
@@ -39,7 +56,7 @@ async function renderPdfToImages(dataUri: string): Promise<string[]> {
     bytes[i] = binary.charCodeAt(i);
   }
 
-  const loadingTask = (pdfjsLib as any).getDocument({ data: bytes });
+  const loadingTask = pdfjsLib.getDocument({ data: bytes });
   const pdf = await loadingTask.promise;
   const images: string[] = [];
   const maxWidth = 1200;
@@ -54,8 +71,8 @@ async function renderPdfToImages(dataUri: string): Promise<string[]> {
     }
     const scaledViewport = page.getViewport({ scale: renderScale });
     const canvas = document.createElement("canvas");
-    canvas.width = scaledViewport.width;
-    canvas.height = scaledViewport.height;
+    canvas.width = Math.floor(scaledViewport.width);
+    canvas.height = Math.floor(scaledViewport.height);
     const ctx = canvas.getContext("2d")!;
     await page.render({ canvasContext: ctx, viewport: scaledViewport }).promise;
     images.push(canvas.toDataURL("image/png"));
@@ -120,7 +137,7 @@ copyBtn.addEventListener("click", () => {
           copyBtn.textContent = "copy";
           copyBtn.classList.remove("copied");
         }, 1500);
-      } catch (e) {
+      } catch {
         setStatus(
           "! failed to copy. try manually selecting the text.",
           "error",
@@ -146,6 +163,7 @@ clearBtn.addEventListener("click", () => {
   fileTypeSelect.value = "unknown";
   previewSection.style.display = "none";
   previewContainer.innerHTML = "";
+  previewContainer.classList.remove("pdf-pages");
   currentDataUri = "";
   currentFileType = "";
   downloadBtn.disabled = true;
@@ -162,134 +180,121 @@ base64Input.addEventListener("keydown", (e) => {
   }
 });
 
-window.addEventListener("message", (event) => {
-  const message = event.data;
+window.addEventListener(
+  "message",
+  (event: MessageEvent<ExtensionToWebviewMessage>) => {
+    const message = event.data;
 
-  switch (message.command) {
-    case "setBase64":
-      base64Input.value = message.data;
-      setStatus(
-        "loaded " +
-          message.data.length +
-          " chars. press [ decode ] or Ctrl+Enter.",
-        "success",
-      );
-      break;
+    switch (message.command) {
+      case "setBase64":
+        base64Input.value = message.data;
+        setStatus(
+          "loaded " +
+            message.data.length +
+            " chars. press [ decode ] or Ctrl+Enter.",
+          "success",
+        );
+        break;
 
-    case "fileLoaded":
-      base64Input.value = message.base64;
-      fileTypeSelect.value = "unknown";
-      setStatus(
-        'file "' +
-          message.fileName +
-          '" loaded (' +
-          message.base64.length +
-          " chars). decoding...",
-        "success",
-      );
-      break;
+      case "fileLoaded":
+        base64Input.value = message.base64;
+        fileTypeSelect.value = "unknown";
+        setStatus(
+          'file "' +
+            message.fileName +
+            '" loaded (' +
+            message.base64.length +
+            " chars). decoding...",
+          "success",
+        );
+        break;
 
-    case "showPreview": {
-      currentDataUri = message.dataUri;
-      currentFileType = message.fileType;
-      previewLabel.textContent = message.label;
-      previewBadge.textContent = message.mimeType;
-      previewContainer.innerHTML = "";
+      case "showPreview": {
+        currentDataUri = message.dataUri;
+        currentFileType = message.fileType;
+        previewLabel.textContent = message.label;
+        previewBadge.textContent = message.mimeType;
+        previewContainer.innerHTML = "";
+        previewContainer.classList.remove("pdf-pages");
 
-      try {
-        const img = document.createElement("img");
-        img.src = message.dataUri;
-        img.alt = message.label;
-        img.onerror = () => {
-          previewContainer.innerHTML =
-            '<div class="error-box">' +
-            '<span class="error-icon">!</span>' +
-            '<span class="error-text">failed to render image. the base64 data may be corrupted or the format is unsupported.</span>' +
-            "</div>";
-          setStatus("! render failed. data may be corrupted.", "error");
-        };
-        previewContainer.appendChild(img);
-        previewSection.style.display = "flex";
-        previewSection.style.flexDirection = "column";
-        downloadBtn.disabled = false;
-        setStatus("preview ready.", "success");
-      } catch (err) {
-        previewContainer.innerHTML =
-          '<div class="error-box">' +
-          '<span class="error-icon">!</span>' +
-          '<span class="error-text">render error: ' +
-          String(err) +
-          "</span>" +
-          "</div>";
-        setStatus("! render error: " + String(err), "error");
-      }
-      break;
-    }
-
-    case "showPdfPreview": {
-      currentDataUri = message.dataUri;
-      currentFileType = message.fileType;
-      previewLabel.textContent = message.label;
-      previewBadge.textContent = message.mimeType;
-      previewContainer.innerHTML = "";
-
-      setStatus("rendering pdf...", "info");
-
-      renderPdfToImages(message.dataUri)
-        .then((images) => {
-          previewContainer.innerHTML = "";
-          if (images.length === 0) {
-            previewContainer.innerHTML =
-              '<div class="error-box">' +
-              '<span class="error-icon">!</span>' +
-              '<span class="error-text">pdf has no renderable pages.</span>' +
-              "</div>";
-            setStatus("! pdf has no pages.", "error");
-            return;
-          }
-          for (let i = 0; i < images.length; i++) {
-            const img = document.createElement("img");
-            img.src = images[i];
-            img.alt = "Page " + (i + 1);
-            img.style.width = "100%";
-            previewContainer.appendChild(img);
-            if (i < images.length - 1) {
-              const sep = document.createElement("div");
-              sep.style.height = "1px";
-              sep.style.background = "var(--border)";
-              sep.style.margin = "8px 0";
-              previewContainer.appendChild(sep);
-            }
-          }
+        try {
+          const img = document.createElement("img");
+          img.src = message.dataUri;
+          img.alt = message.label;
+          img.onerror = () => {
+            showErrorBox(
+              "failed to render image. the base64 data may be corrupted or the format is unsupported.",
+            );
+            setStatus("! render failed. data may be corrupted.", "error");
+          };
+          previewContainer.appendChild(img);
           previewSection.style.display = "flex";
           previewSection.style.flexDirection = "column";
           downloadBtn.disabled = false;
-          setStatus(
-            "pdf rendered (" +
-              images.length +
-              " page" +
-              (images.length > 1 ? "s" : "") +
-              ").",
-            "success",
-          );
-        })
-        .catch((err) => {
-          previewContainer.innerHTML =
-            '<div class="error-box">' +
-            '<span class="error-icon">!</span>' +
-            '<span class="error-text">failed to render pdf: ' +
-            String(err) +
-            "</span>" +
-            "</div>";
-          setStatus("! pdf render failed: " + String(err), "error");
-        });
-      break;
-    }
+          setStatus("preview ready.", "success");
+        } catch (err) {
+          showErrorBox("render error: " + String(err));
+          setStatus("! render error: " + String(err), "error");
+        }
+        break;
+      }
 
-    case "showError":
-      setStatus("! " + message.data, "error");
-      previewSection.style.display = "none";
-      downloadBtn.disabled = true;
-      break;
-  }
-});
+      case "showPdfPreview": {
+        currentDataUri = message.dataUri;
+        currentFileType = message.fileType;
+        previewLabel.textContent = message.label;
+        previewBadge.textContent = message.mimeType;
+        previewContainer.innerHTML = "";
+        previewContainer.classList.add("pdf-pages");
+
+        setStatus("rendering pdf...", "info");
+
+        renderPdfToImages(message.dataUri)
+          .then((images) => {
+            previewContainer.innerHTML = "";
+            if (images.length === 0) {
+              showErrorBox("pdf has no renderable pages.");
+              setStatus("! pdf has no pages.", "error");
+              return;
+            }
+            for (let i = 0; i < images.length; i++) {
+              const img = document.createElement("img");
+              img.src = images[i];
+              img.alt = "Page " + (i + 1);
+              img.style.width = "100%";
+              previewContainer.appendChild(img);
+              if (i < images.length - 1) {
+                const sep = document.createElement("div");
+                sep.style.height = "1px";
+                sep.style.background = "var(--border)";
+                sep.style.margin = "8px 0";
+                previewContainer.appendChild(sep);
+              }
+            }
+            previewSection.style.display = "flex";
+            previewSection.style.flexDirection = "column";
+            downloadBtn.disabled = false;
+            setStatus(
+              "pdf rendered (" +
+                images.length +
+                " page" +
+                (images.length > 1 ? "s" : "") +
+                ").",
+              "success",
+            );
+          })
+          .catch((err: unknown) => {
+            showErrorBox("failed to render pdf: " + String(err));
+            setStatus("! pdf render failed: " + String(err), "error");
+          });
+        break;
+      }
+
+      case "showError":
+        setStatus("! " + message.data, "error");
+        previewSection.style.display = "none";
+        downloadBtn.disabled = true;
+        break;
+    }
+  },
+);
