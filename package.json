@@ -3,7 +3,7 @@
   "displayName": "Base64Lens",
   "description": "Visualize Base64-encoded PDFs, images, and documents directly in VS Code",
   "version": "0.1.0",
-  "publisher": "base64lens",
+  "publisher": "nestor-ds",
   "license": "MIT",
   "icon": "media/icon.png",
   "repository": {
