@@ -33,9 +33,28 @@
     "commands": [
       {
         "command": "base64lens.preview",
-        "title": "Preview Base64"
+        "title": "Preview Base64",
+        "icon": "$(search)"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "base64lens",
+          "title": "Base64Lens",
+          "icon": "media/activity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "base64lens": [
+        {
+          "type": "webview",
+          "id": "base64lens.sidebar",
+          "name": "Base64Lens"
+        }
+      ]
+    },
     "menus": {
       "editor/context": [
         {

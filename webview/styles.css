@@ -58,6 +58,8 @@ body {
   align-items: baseline;
   gap: 14px;
   flex: none;
+  flex-wrap: wrap;
+  row-gap: 0;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
 }
@@ -435,7 +437,9 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 4px 12px;
+  row-gap: 4px;
+  flex-wrap: wrap;
   padding: 6px 10px 6px 14px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
@@ -447,6 +451,7 @@ kbd {
   align-items: center;
   gap: 10px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .preview-label {
@@ -474,6 +479,7 @@ kbd {
   align-items: center;
   gap: 4px;
   flex: none;
+  margin-left: auto;
 }
 
 .tool-sep {
@@ -664,6 +670,114 @@ body.drag-over .drop-overlay {
 
 ::-webkit-scrollbar-corner {
   background: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* Responsive                                                          */
+/* ------------------------------------------------------------------ */
+
+@media (max-width: 480px) {
+  .app {
+    padding: 12px 12px 10px;
+    gap: 10px;
+  }
+
+  .header {
+    padding-bottom: 8px;
+  }
+
+  .subtitle {
+    letter-spacing: 0.5px;
+  }
+
+  textarea {
+    min-height: 84px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .toolbar-select {
+    flex: none;
+  }
+
+  .toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .btn-accent {
+    grid-column: 1 / -1;
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
+  .btn-text {
+    grid-column: 1 / -1;
+    justify-self: center;
+    padding-inline: 24px;
+  }
+
+  .btn-accent kbd {
+    display: none;
+  }
+
+  .empty-state {
+    padding: 20px 14px;
+    gap: 6px;
+  }
+
+  .empty-state .btn {
+    align-self: center;
+  }
+
+  .drop-box {
+    padding: 26px 34px;
+  }
+
+  .preview-container {
+    padding: 14px;
+  }
+
+  .preview-container.pdf-pages {
+    padding: 10px;
+  }
+}
+
+@media (max-height: 520px) {
+  .app {
+    gap: 8px;
+  }
+
+  textarea {
+    max-height: 22vh;
+    min-height: 64px;
+  }
+
+  .empty-state {
+    min-height: 140px;
+  }
+
+  .empty-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .empty-kbd {
+    display: none;
+  }
+}
+
+@media (min-width: 1100px) {
+  .app {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

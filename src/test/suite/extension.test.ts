@@ -2,9 +2,15 @@ import * as assert from "node:assert";
 import * as vscode from "vscode";
 
 describe("Base64Lens extension", () => {
+  function findSelf(): vscode.Extension<unknown> | undefined {
+    return vscode.extensions.all.find(
+      (e) => e.packageJSON?.name === "base64lens",
+    );
+  }
+
   it("is present and activates without errors", async () => {
-    const extension = vscode.extensions.getExtension("base64lens.base64lens");
-    assert.ok(extension, "Extension base64lens.base64lens should be available");
+    const extension = findSelf();
+    assert.ok(extension, "Extension base64lens should be available");
 
     if (!extension.isActive) {
       await extension.activate();
@@ -13,6 +19,12 @@ describe("Base64Lens extension", () => {
   });
 
   it("registers the preview command", async () => {
+    const extension = findSelf();
+    assert.ok(extension, "Extension base64lens should be available");
+    if (!extension.isActive) {
+      await extension.activate();
+    }
+
     const commands = await vscode.commands.getCommands(true);
     assert.ok(
       commands.includes("base64lens.preview"),

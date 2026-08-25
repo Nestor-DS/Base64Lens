@@ -32,7 +32,7 @@ const webviewConfig = {
 /** @type {import('esbuild').BuildOptions} */
 const testConfig = {
   entryPoints: ["src/test/**/*.test.ts"],
-  outdir: "out/test",
+  outdir: "out",
   outbase: "src",
   bundle: true,
   external: ["vscode"],

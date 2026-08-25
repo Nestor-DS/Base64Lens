@@ -21,7 +21,7 @@ export interface ShowPreviewMessage {
 
 export interface ShowPdfPreviewMessage {
   command: "showPdfPreview";
-  pdfUri: string;
+  pdfUri?: string;
   dataUri: string;
   fileType: FileType;
   mimeType: string;

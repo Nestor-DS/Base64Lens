@@ -1,7 +1,17 @@
 import * as vscode from "vscode";
-import { Base64PreviewPanel } from "./panels/Base64PreviewPanel";
+import { Base64LensView } from "./views/Base64LensView";
 
 export function activate(context: vscode.ExtensionContext) {
+  const provider = new Base64LensView(context.extensionUri);
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      Base64LensView.viewId,
+      provider,
+      { webviewOptions: { retainContextWhenHidden: true } },
+    ),
+  );
+
   const previewCommand = vscode.commands.registerCommand(
     "base64lens.preview",
     () => {
@@ -15,13 +25,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
       }
 
-      Base64PreviewPanel.createOrShow(context.extensionUri, selectedText);
+      provider.openWith(selectedText);
     },
   );
 
   context.subscriptions.push(previewCommand);
 }
 
-export function deactivate() {
-  Base64PreviewPanel.currentPanel?.dispose();
-}
+export function deactivate() {}

@@ -26,7 +26,6 @@ const openFileBtn = document.getElementById("openFileBtn") as HTMLButtonElement;
 const emptyOpenBtn = document.getElementById("emptyOpenBtn") as HTMLButtonElement;
 const pasteBtn = document.getElementById("pasteBtn") as HTMLButtonElement;
 const copyBtn = document.getElementById("copyBtn") as HTMLButtonElement;
-const inputSection = document.getElementById("inputSection")!;
 const inputStats = document.getElementById("inputStats")!;
 const statusBar = document.getElementById("statusBar")!;
 const emptyState = document.getElementById("emptyState")!;
@@ -246,6 +245,7 @@ function applyZoom() {
   for (const img of imgs) {
     if (!img.naturalWidth) continue;
     img.style.maxHeight = "none";
+    img.style.maxWidth = "none";
     img.style.height = "auto";
     img.style.width = Math.round(img.naturalWidth * scale) + "px";
   }
