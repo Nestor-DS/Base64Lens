@@ -50,6 +50,7 @@ export interface DownloadRequestMessage {
   command: "download";
   dataUri: string;
   fileType: FileType;
+  suggestedName?: string;
 }
 
 export interface RequestFileMessage {
