@@ -28,10 +28,7 @@ export class Base64LensView implements vscode.WebviewViewProvider {
 
     view.webview.options = {
       enableScripts: true,
-      localResourceRoots: [
-        vscode.Uri.joinPath(this._extensionUri, "out"),
-        vscode.Uri.joinPath(this._extensionUri, "webview"),
-      ],
+      localResourceRoots: [vscode.Uri.joinPath(this._extensionUri, "out")],
     };
 
     view.webview.html = getWebviewHtml(view.webview, this._extensionUri);

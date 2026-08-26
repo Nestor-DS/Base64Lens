@@ -64,6 +64,11 @@ async function build() {
   const workerOut = path.join("out", "pdf.worker.min.mjs");
   fs.copyFileSync(workerSrc, workerOut);
 
+  fs.copyFileSync(
+    path.join("webview", "styles.css"),
+    path.join("out", "styles.css")
+  );
+
   console.log(`[${watch ? "watch" : "build"}] All bundles built (worker copied)`);
 }
 

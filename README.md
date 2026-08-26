@@ -4,7 +4,14 @@
   <img src="media/icon.png" alt="Base64Lens logo" width="128" />
 </p>
 
-**Base64Lens** lets you visualize Base64-encoded PDFs, images, and documents directly inside VS Code — no more pasting long strings into online decoders. Everything is processed locally; no data ever leaves your machine.
+**Base64Lens** View PDF files, images, and Base64-encoded documents **directly inside VS Code**.  
+Everything is processed **locally** — nothing is sent to any server.
+
+### Screenshots
+
+|                              Base                              |                                Image                                 |                               PDF                                |
+| :------------------------------------------------------------: | :------------------------------------------------------------------: | :--------------------------------------------------------------: |
+| <img src="media/base.png" alt="Base64Lens logo" width="400" /> | <img src="media/imageExample.png" alt="Image preview" width="400" /> | <img src="media/pdfExample.png" alt="PDF preview" width="400" /> |
 
 ## Features
 

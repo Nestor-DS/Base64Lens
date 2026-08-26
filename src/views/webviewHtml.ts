@@ -9,7 +9,7 @@ export function getWebviewHtml(
   const nonce = getNonce();
 
   const stylesUri = webview.asWebviewUri(
-    vscode.Uri.joinPath(extensionUri, "webview", "styles.css"),
+    vscode.Uri.joinPath(extensionUri, "out", "styles.css"),
   );
   const mainScriptUri = webview.asWebviewUri(
     vscode.Uri.joinPath(extensionUri, "out", "webview.js"),
